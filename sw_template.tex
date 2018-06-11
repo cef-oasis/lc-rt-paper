@@ -4,6 +4,7 @@
 % add. options: [seceqn,secthm,crcready,onecolumn]
 \documentclass[sw]{iosart2x}
 \usepackage{hyperref}
+\usepackage{listings}
 %\usepackage{dcolumn}
 %\usepackage{endnotes}
 
@@ -23,7 +24,7 @@
 
 %\pretitle{}
 \title{The Linked Connections framework for reliable historical and real-time data}
-\runningtitle{Article Title}
+\runningtitle{The Linked Connections framework for reliable historical and real-time data}
 %\subtitle{}
 
 % For one author:
@@ -58,7 +59,7 @@ and
 %\end{review}
 
 \begin{abstract}
-Using Linked Data based approaches a wide amount of companies and institutions share their data in an affordable way while allowing third parties to perform standard and federated queries. In transport domain, where a complex environment emerge, static, real-time and historical data have to coexist to provide reliable data to the information systems. Currently, however, public transport data is published in a way in which the processing is too expensive. In previous work, the Linked Connections (LC) framework was introduced as a cost-efficient publishing alternative to the \textit{de-facto} standard GTFS and route planning APIs. LC provides a light HTTP interface that allows smart clients to create their own route planners. We notice that at the moment in which of historical and real-time are taken into account in the LC framework, some improvements are needed. Specifically in the case of live updates about the schedules, where it is important to maintain stable identifiers that remain valid over time.
+Using Linked Data based approaches a wide amount of companies and institutions share their data in an affordable way while allowing third parties to perform standard and federated queries. In transport domain, where a complex environment emerges, static, real-time and historical data have to coexist to provide reliable data to the information systems. Currently, however, public transport data is published in a way in which the processing is too expensive. In previous work, the Linked Connections (LC) framework was introduced as a cost-efficient publishing alternative to the \textit{de-facto} standard GTFS and route planning APIs. LC provides a light HTTP interface that allows smart clients to create their own route planners. We notice that at the moment in which historical and real-time are taken into account in the LC framework, some improvements are needed. Specifically in the case of live updates about the schedules, where it is important to maintain stable identifiers that remain valid over time.
 
 This paper continues the previous work we have made for developing an affordable framework to publish reliable real-time and historical transport data. Our main contributions are: (i) a Linked Connections Real Time server that is able to process GTFS-RT feeds providing consistent identifiers, (ii) an efficient management of historical data taking into account the size of each fragments exposed on the Web and (iii) an implementation of multiple route planning algorithms to test if our approach provides reliable access to real-time and historical data. We evaluate and compare the contributions with our previous approaches where the distribution of the fragments were based on other variables, like the time. We discover that taking into account the size of the fragments has a relevant impact in the performance of query evaluation, as originally expected. In future work we would like to identify the optimal size of the fragments automatically, taking into account multiple variables like the geographical location or the type of transport.
 \end{abstract}
@@ -78,7 +79,7 @@ This paper continues the previous work we have made for developing an affordable
 
 %\subsection{}\label{s1.1}
 \section{Introduction}\label{introduction} %Oscar and David
-In the current state of the Web of Data, a wide amount of that data are exposed following the principles of Linked Data\cite{bizer2009linked}. Giving unique identifiers to each resource, representing the data using a shared and common vocabulary of the domain or the possibility of dereferencing each URI are some of the relevant aspects that made Linked Data as one the most common approaches to organize and expose the data on the Web\cite{heath2011linked} This features allow third parties to query the data in a standard way, using for example, the corresponding query language for RDF, SPARQL\cite{prud2006sparql}, and the possibility of doing federation across multiple datasets\cite{buil2013federating}. However, today, a lot of domains need to deal with real-time and historical data where is important to maintain stable identifiers that remain valid over time. Transport is one of these domain, where a complex environment with multiple types of data sources have to be managed to provide reliable data to information systems.
+In the current state of the Web of Data, a wide amount of that data are exposed following the principles of Linked Data\cite{bizer2009linked}. Giving unique identifiers to each resource, representing the data using a shared and common vocabulary of the domain or the possibility of dereferencing each URI are some of the relevant aspects that made Linked Data as one the most common approaches to organize and expose the data on the Web\cite{heath2011linked}. This features allow third parties to query the data in a standard way, using for example, the corresponding query language for RDF, SPARQL\cite{prud2006sparql}, and the possibility of doing federation across multiple datasets\cite{buil2013federating}. However, today, a lot of domains need to deal with real-time and historical data where is important to maintain stable identifiers that remain valid over time. Transport is one of these domain, where a complex environment with multiple types of data sources have to be managed to provide reliable data to information systems.
 
 Since May 2017, one of the main motivations for developing solutions about multimodal and integrated travel information services is the publication of the new directive by the EU Commission about discoverability and access to public transport data across Europe. This document proposes the making of public transport data from providers available on national or common access points saved on databases, data warehouse or repositories. All the states will provide access to a unique common point following different static standards as Transmodel\footnote{\url{http://www.transmodel-cen.eu}}, Datex II\footnote{\url{http://www.datex2.eu}} or GTFS\footnote{\url{https://developers.google.com/transit/gtfs}} and real-time standards GTFS-RT\footnote{\url{https://developers.google.com/transit/gtfs-realtime/}} or SIRI\footnote{\url{http://www.transmodel-cen.eu/standards/siri/}}. So the domain requires solutions able to provide reliable data and to deal with the heterogeneity of access points and the data formats.
 
@@ -91,18 +92,20 @@ One of the main challenges when the Linked Data approaches deal with transport d
 
 Our work is focused on providing an improvement of the current state of Linked Connections framework by allowing an efficient management of historical and real-time data with a standard vocabulary for the transport domain. This is relevant because two main reasons: (i) currently, a lot of transport companies are starting to provide access to their real-time services, but they the most common way to do it, is to develop an ad-hoc solutions like APIs or web services that only works locally \cite{colpaert2016public} and (ii) the heterogeneity of the domain in terms of data formats will be a very relevant problem next years, especially in Europe, based on the proposal of the EU Commission so a standard framework will be needed.  
 
-In this paper we present the Linked Connections framework to provide reliable access to real-time and historical data. Our main contribution is the extension of previous version of the LC server, by providing an efficient management of real-time and historical data. First, we develop a library that get information from static GTFS datasets and GTFS-RT data streams and exploit and integrate them following the LC vocabulary. Second, we modify the approach of Linked Connections for splitting the fragments of the data using a specific size of each fragment instead of the time. Third, we program a set of route planning algorithms in the top of the LC server to test if our approach is able to provide reliable data. Finally, we evaluate the improvements comparing the new versión of the LC framework with our previous approaches, as base line.
+In this paper we present the Linked Connections framework to provide reliable access to real-time and historical data. Our main contribution is the extension of previous version of the LC server, by providing an efficient management of real-time and historical data. First, we develop a library that gets information from static GTFS datasets and GTFS-RT data streams and exploit and integrate them following the LC vocabulary. Second, we modify the approach of Linked Connections for splitting the fragments of the data using a specific size of each fragment instead of the time. Third, we program a set of route planning algorithms in the top of the LC server to test if our approach is able to provide reliable data. Finally, we evaluate the improvements comparing the new version of the LC framework with our previous approaches, as base line.
 
-The paper is organized as follows: Section 2 presents some of the related work on benefits of Linked Data, solutions to query data on the web, the EU regulation about the availability of transport data on the Web and current (semantic) route planners. Section 3 describes our proposal about the improvements of the Linked Connections framework. Section 4 presents the design of our experiments. Section 5 describes the results we obtained evaluating our main contributions. Section 6 provides a brief discussion about the relevance of our contributions, and Section 7 presents conclusions and areas for future work.
+The paper is organized as follows: Section 2 presents some of the related work about relevant approaches about exposing data on the web efficiently,  previous steps about the Linked Connections framework, a description of the \textit{de-facto} standard GTFS and the specification of relevant route planning algorithms. Section 3 describes our proposal about the improvements of the Linked Connections framework. Section 4 presents the design of our experiments. Section 5 describes the results we obtained evaluating our main contributions. Section 6 provides a brief discussion about the relevance of our contributions, and Section 7 presents conclusions and areas for future work.
 
 
 
 \section{Related Work}\label{related_work} %David
-On the current state of the Web, huge amount of data are exposed following the principles of Linked Data. We describe the main contributions on this topic, and also the relevance of the ones made in querying data on the web and the current solutions on planning transport routes using semantics.
+On the current state of the Web, huge amount of data are exposed following the principles of Linked Data. In this section, we describe the main contributions on this topic focused on an efficient exposition and on the transport domain, a description of previous approaches developed using the Linked Connections framework and the analysis of the model for transport data, GTFS, that supports our work. Finally we analyse the most relevant algorithms for route planning.
 
 One of the most well-known alternatives to publish data on the Web is Linked Data \cite{bizer2009linked}. Linked Data allows to identify in an unique way resources on the Web using identifiers, or HTTP URIs. It is a method to distribute and scale data over large organizations such as the Web. When looking up this identifier by using the HTTP protocol or using a Web browser, a definition must be returned, including links towards potential other interesting resources, a practice called \textit{dereferencing}. The triple format to be used in combination with URIs is standardized within RDF. The URIs used for these triples already existed in other data sources, and we thus favoured using the same identifiers. It is up to a data publisher to make a choice on which data sources can provide the identifiers for a certain type of entities. 
 
-A common problem in Linked Data is the availability of the triple stores. They provide a way to getting data using the SPARQL query language but at the moment of queries involved long periods of time, these approaches are not efficient\cite{verborgh2014querying}. The Linked Data Fragments\cite{verborgh2016triple,verborgh2014web} solve this issue fragmenting the data in several HTTP documents. Following this approach the store moves the load from server side to client side improving its availability. Linked Connections\cite{colpaert2015intermodal} applies this approach to develop an cost-efficient solution based on a HTTP interface for transport data. The main assumption of LC  is that the relevant data for route planners can be based on the connection concept. Basically, as the LC vocabulary\footnote{\url{http://semweb.mmlab.be/ns/linkedconnections}} defines it, a connection describes a departure at a certain stop and an arrival at a different stop with their corresponding departure and arrival times. A basic implementation of LC is shown in Figure \ref{fig:lc_imp}, where the route planning algorithms have to analyse the connections (small rectangles) through the pages (big rectangles) and across the time to find the expected route. The join between the connections is possible because same resources have same identifiers, based on one of the principles of Linked Data.
+A common problem in Linked Data is the availability of the triple stores. They provide a way to getting data using the SPARQL query language but at the moment of queries involved long periods of time, these approaches are not efficient\cite{verborgh2014querying}. The Linked Data Fragments(LDF)\cite{verborgh2016triple,verborgh2014web} solve this issue fragmenting the data in several HTTP documents. Following this approach the store moves the load from server side to client side improving its availability. Comunica\cite{taelman2018comunica} is a framework that extends the possibilities of LDF, allowing to query other semantic interfaces as common SPARQL endpoint, RDF data dumps or HDT datasets\cite{fernandez2013binary}. 
+
+Linked Connections\cite{colpaert2015intermodal} applies this approach to develop an cost-efficient solution based on a HTTP interface for transport data. The main assumption of LC  is that the relevant data for route planners can be based on the connection concept. Basically, as the LC vocabulary\footnote{\url{http://semweb.mmlab.be/ns/linkedconnections}} defines it, a connection describes a departure at a certain stop and an arrival at a different stop with their corresponding departure and arrival times and without any intermediate stop. A basic implementation of LC is shown in Figure \ref{fig:lc_imp}, where the route planning algorithms have to analyse the connections (small rectangles) through the pages (big rectangles) and across the time to find the expected route. The join between the connections is possible because same resources have same identifiers, based on one of the principles of Linked Data. The Hydra Ontology\cite{lanthaler2013hydra} is used to specify the next and previous page links as well as how the resource itself should be discovered
 
 
 \begin{figure}[t]
@@ -124,46 +127,77 @@ All the solutions that we aforementioned are rely on the \textit{de-facto} stand
 	\item transfers: Rules for making connections at transfer points between routes.
 \end{itemize}
 
-In order to link the terms and identifiers define in these files with the Linked Open Data cloud, we have created the Linked GTFS\footnote{\url{http://vocab.gtfs.org/terms}} vocabulary. We create mappings able to transform GTFS files to Linked GTFS following the CSV2RDF\cite{tennison2015model} W3C recommendation\footnote{\url{https:// github.com/ OpenTransport/ gtfs- csv2rdf}} but also using other standard OBDA mapping languages that are able to deal with CSV files\footnote{\url{https://github.com/dachafra/gtfsmappings}}, like RML\cite{dimou2014rml} or R2RML\cite{das2012r2rml}. 
+In order to link the terms and identifiers define in these files with the Linked Open Data cloud, we used the Linked GTFS\footnote{\url{http://vocab.gtfs.org/terms}} vocabulary. We create mappings able to transform GTFS files to Linked GTFS following the CSV2RDF\cite{tennison2015model} W3C recommendation\footnote{\url{https:// github.com/ OpenTransport/ gtfs- csv2rdf}} but also using other standard OBDA mapping languages that are able to deal with CSV files\footnote{\url{https://github.com/dachafra/gtfsmappings}}, like RML\cite{dimou2014rml} or R2RML\cite{das2012r2rml}. 
 
 \begin{figure}[t]
 	\includegraphics[width=0.47\textwidth]{images/gtfsmodel.png}
 	\caption{The GTFS model and its primary relations}\label{fig:gtfs}
 \end{figure}
 
-The extension of GTFS for real-time, GTFS-RT\footnote{\url{https://developers.google.com/transit/gtfs-realtime/}} is a feed specificaftion that allows public transport agencies to provide realtime updates about their fleet. The specification supports three types of information: (i) trips updates like delays, cancellations or change routes, (ii) service alerts like stop moved, unforeseen events affecting stations, routes, etc and (iii)  information of vehicle positions  including location and congestion level. The data exchange format is based on Protocol Buffers\footnote{\url{https://developers.google.com/protocol-buffers/}}.
+The extension of GTFS for real-time, GTFS-RT\footnote{\url{https://developers.google.com/transit/gtfs-realtime/}} is a feed specification that allows public transport agencies to provide realtime updates about their fleet. The specification supports three types of information: (i) trips updates like delays, cancellations or change routes, (ii) service alerts like stop moved, unforeseen events affecting stations, routes, etc and (iii)  information of vehicle positions  including location and congestion level. The data exchange format is based on Protocol Buffers\footnote{\url{https://developers.google.com/protocol-buffers/}}.
 
-It is also important to mention the works about route planning algorithms, that can be developed at the top of the Linked Connections framework. The problem that this algorithms has to solve using the data is the Earliest Arrival Time (EAT). An EAT query consists of a departure stop, a departure time and a destination stop. 
+It is also important to mention the works about route planning algorithms, that can be developed on the top of the Linked Connections framework. The problem that these algorithms has to solve using the data is the Earliest Arrival Time (EAT). An EAT query consists of a departure stop, a departure time and a destination stop. The main goal is to find the fastest journey to the destination stop starting from the departure stop at the departure time. There are more complex route planning questions like the Minimum Expected Arrival Time (MEAT)\cite{dibbelt2013intriguingly} or \textit{multi-criteria profile} queries\cite{bast2010fast,delling2014round,witt2015trip}. The Connection Scan Algorithm (CSA) \cite{dibbelt2013intriguingly} is an approach that models the timetable data as a directed acyclic graph \cite{strasser2014connection} using a stream of connections. As we defined before, a connection is a combination of a \textit{departure stop} ($c_{depstop}$) with a \textit{departure time} ($c_{deptime}$) and an \textit{arrival stop} ($c_{arrstop}$) with an \textit{arrival time} ($c_{arrtime}$). All the connections are combined in a stream of connections, sorted by increasing departure time. Thanks to this feature, it is sufficient to only consider the connections where the $c_{deptime}$ is later than the desirable departure time. The CSA algorithm works as follows, when a new scanned connection leads to a faster route to the arrival stop, the minimum spanning tree (MST) will be updated. This is the case when $c_{arrtime}$ is earlier than the actual EAT at $c_{arrstop}$, Finally the algorithm ends when the destination stop is added to the MST and the resulting journey can be obtained by following the path in the MST backwards.
+
+In summary, after some proofs of concepts developed taking into account real-time and historical data in the LC framework and the current advances in the state of the work exposing the data on the Web efficiently, we think that it is the moment to improve the features of the current LC framework to create a standard mechanism for publish reliable public transport data. The main motivations to do that are, on one hand, the necessity to improve the current access of the transport information services to the data, where at the moment that real-time is involved, the solutions are basically ad-hoc and they are not feasible if we are based on the proposal of the EU Commission for publish public transport data. On the other hand, supported by the characteristics of the transport data, where a complex data management environment emerges, the new approach that we present in this paper can serve as a source of inspiration for historical and real-time Linked Data management on the Web in other domains.
 
 
-%EU comission document
+%EU comission proposal?
 
 \section{The Linked Connections Framework}
+In this section, we describe the Linked Connections framework for providing reliable access to real-time and historical data. First, we describe a summary of the Linked Connections specification including new properties about features of real-time data. Second, we describe the extensions we develop to deal with these types of data: the linked connections library for transforming real-time feeds into connections and the LC server for managing and exposing that connections on the Web efficiently.
 
+\subsection{The Linked Connections specification}
 
-The basic properties used to define an \texttt{lc:connection} are:
+The LC specification\footnote{\url{https://linkedconnections.org/specification/}} explains the how to implement a data publishing sever, and explains what you can rely on when writing a route planning client. Following the Linked Data principles and the REST constraints, we make sure that from any HTTP response, hypermedia controls can be followed to discover the rest of the dataset. A "Linked Connections graph" is a paged collection of connections, describing the time transit vehicles leave and arrive. The Linked Connections vocabulary\footnote{\url{http://semweb.mmlab.be/ns/linkedconnections\#}} defines the basic properties to used with the \texttt{lc:Connection} class:
 \begin{itemize}
-	\item \texttt{lc:departureTime} Date-Time (including delay) at which the vehicle will leave for the lc:arrivalStop.
-	\item \texttt{lc:departureStop} The departure stop.
-	\item \texttt{lc:departureDelay} When the lc:departureTime is not the planned departureTime.
-	\item \texttt{lc:arrivalTime} Date-Time (including delay) at which the vehicle will arrives at lc:arrivalStop.
-	\item \texttt{lc:arrivalStop} The departure stop.
-	\item \texttt{lc:arrivalDelay} When the lc:arrivalTime is not the planned arrivalTime.
+	\item \texttt{lc:departureTime} It is a date-time, including delay, at which the vehicle will leave for the \texttt{lc:arrivalStop}.
+	\item \texttt{lc:departureStop} The departure stop URI.
+	\item \texttt{lc:departureDelay} Provides time in seconds when the \texttt{lc:departureTime} is not the planned departureTime.
+	\item \texttt{lc:arrivalTime} It is a date-time, including delay, at which the vehicle will arrives at \texttt{lc:arrivalStop}.
+	\item \texttt{lc:arrivalStop} The arrival stop URI.
+	\item \texttt{lc:arrivalDelay} Provides time in second when the \texttt{lc:arrivalTime} is not the planned arrivalTime.
 \end{itemize}
 
-\subsection{Real-time Linked Connections library}
+We also reuse the terms from the Linked GTFS vocabulary\footnote{\url{http://vocab.gtfs.org/terms}} in order to describe other properties of a \texttt{lc:Connection} class. This vocabulary it is aligned with the \textit{de-facto} standard to exchange public transport data on the Web, GTFS:
 
-\subsection{Real-time and historical Linked Connections server}
+\begin{itemize}
+\item \texttt{gtfs:trip} Must be set to link a a \texttt{gtfs:Trip} with a \texttt{lc:Connection}, identifying whether another connection is part of the current trip of a vehicle.
+\item \texttt{gtfs:pickupType} Should be set to indicate whether people can be picked up at this stop. The possible values: \texttt{gtfs:Regular}, \texttt{gtfs:NotAvailable}, \texttt{gtfs:MustPhone} and \texttt{gtfs:MustCoordinateWithDriver}.
+\item \texttt{gtfs:dropOffType} Should be set to indicate whether people can be dropped off at this stop. The possible values are the same as the defined in the \texttt{gtfs:pickupType} property.
+\end{itemize}
+
+It is important to remark that each Linked Connections page must contain some metadata about itself. The URL after redirection, or the one indicated by the Location HTTP header, therefore must occur in the triples of the response. The current page must contain the hypermedia controls to discover under what conditions the data can be legally reused, and must contain the hypermedia controls to understand how to navigate through the paged collection(s). A different ways exist to implement the paging strategy. At least one of the strategies must be implemented for a Linked Connections client to fin the next pages to precessed:
+\begin{enumerate}
+\item Each response must contain a \texttt{hydra:next} and \texttt{hydra:previous} page link.
+\item Each response should contain a \texttt{hydra:search} describing that you can search for a specific time, and that the client will be redirected to a page containing information about that timestamp. To describe this functionality the \texttt{hydra:property} \texttt{lc:departureTimeQuery} is used. An example is shown in the Figure \ref{fig:metadata}
+\end{enumerate}
+
+\begin{figure}[t]
+	\includegraphics[width=0.5\textwidth]{images/search.png}
+	\caption{Metadata LC response}\label{fig:metadata}
+\end{figure}
+
+Finally, for each document that is published by a Linked Connections server, a Cross Origin Resource Sharing\footnote{\url{http://enable-cors.org/}} HTTP header must set the property Access-Control-Allow-Origin for sharing the response with any origin. The server also should implement thorough caching strategies, as the cachability is one of the biggest advantages of the Linked Connections framework. Both conditional requests\footnote{\url{conditional requests}} as regular caching\footnote{\url{regular caching}} are recommended. As every connection will need to have a unique an persistent identifier, an HTTP URI, the server must support at least one RDF1.1 format, such as JSON-LD\cite{world2014json}, TriG\cite{bizer2014rdf} or N-Quads\cite{cyganiak2008n}. The connection URI should follow the Linked Data principles\cite{bizer2009linked}.
+
+\subsection{Real-time Linked Connections library}
+%https://github.com/linkedconnections/gtfsrt2lc
+The Linked Connection library for dealing with real-time data is 
+\begin{figure}[t]
+	\includegraphics[width=0.47\textwidth]{images/gtfsrt2lc.png}
+	\caption{The GTFSRT2LC library}\label{fig:gtfsrt2lc}
+\end{figure}
+
+
+
+\subsection{Managing real-time and historical with the Linked Connections server}
+
+
 
 \subsection{Route planning algorithms}
 
 \section{Evaluation Design}
-%data analysis (), implementations used (all), 
-\subsection{An example}
-
-
-
-
+%data analysis (size, rt or not, etc), implementations used (all), 
+\subsection{A running example: Providing reliable access to SNCB}
 
 \section{Results}
 
@@ -206,7 +240,7 @@ The basic properties used to define an \texttt{lc:connection} are:
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-
+\nocite{*}
 % if your bibliography is in bibtex format, use those commands:
 \bibliographystyle{ios1}           % Style BST file.
 \bibliography{bibliography}        % Bibliography file (usually '*.bib')
