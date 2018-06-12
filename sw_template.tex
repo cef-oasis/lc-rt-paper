@@ -207,10 +207,17 @@ Finally, we developed a library\footnote{\url{https://github.com/linkedconnectio
 
 
 \subsection{Managing real-time and historical with the Linked Connections server}
+The second main contribution of this paper, after develop a way to create Linked Connections feeds taking into account real-time, is how to provide reliable access to historical and real-time transport data in an cost-efficiently way. For that reason, we develop a Linked Connections server which exposes data fragments using JSON-LD serialization format. First, the server uses the GTFSRT2LC library for creating the Linked Connections feed as we describe in the above section. After that, the fragmenting process starts using the information provided in the configuration of the server about the fragment size and the fragment time span. 
 
+As we aforementioned, the previous process for fragmenting LC are based on the time, using this variable to pagination the data and creating an heterogeneous environment in terms of the fragment size. It is the main reason why we start to fragmenting the historical data of the LC feed homogeneously providing a specific fragment size, that has a relevant effect in terms of performance, as we demonstrate in the Section 5. We also fragment the LC real-time feed using a time span. 
+%Julian's help is needed. The server will expose both, the historical and the real-time connections 
+%explicar como se gestiona el tema de datos stadisticos y datos reales (como una connection static no se tiene en cuenta cuando hay una connection con tiempo real, es por los ids de las estaciones y los departure y arrival time)
+
+The server also allows querying historic data by means of the Memento Framework\cite{van2010http} which enables time-based content negotiation over HTTP. By using the Accept-Datetime header a client can request the state of a resource at a given moment. If existing, the server will respond with a 302 Found containing the URI of the stored version of such resource. So if a request is made to obtain a Linked Connections fragment identified by a departure time, the headers of the fragment will provide the information about the Accept-Datetime. That means that is possible to know what is the state of the delays at a given date-time for a set of departures times.
 
 
 \subsection{Route planning algorithms}
+%move to evaluation design section?
 
 \section{Evaluation Design}
 %data analysis (size, rt or not, etc), implementations used (all), 
@@ -223,7 +230,7 @@ Finally, we developed a library\footnote{\url{https://github.com/linkedconnectio
 \section{Conclusions and Future work}
 
 \begin{acks}
-	
+This work has been partially supported by a predoctoral grant from the I+D+i program of the Universidad Polit\'ecnica de Madrid and also by the CEF European project OASIS CEF-26696297.
 \end{acks}
 
 %\begin{figure}[t]
