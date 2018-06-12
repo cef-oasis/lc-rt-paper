@@ -5,6 +5,7 @@
 \documentclass[sw]{iosart2x}
 \usepackage{hyperref}
 \usepackage{listings}
+
 %\usepackage{dcolumn}
 %\usepackage{endnotes}
 
@@ -19,7 +20,7 @@
 \lastpage{1}
 
 \begin{document}
-
+\sloppy
 \begin{frontmatter}
 
 %\pretitle{}
@@ -177,16 +178,32 @@ It is important to remark that each Linked Connections page must contain some me
 	\caption{Metadata LC response}\label{fig:metadata}
 \end{figure}
 
-Finally, for each document that is published by a Linked Connections server, a Cross Origin Resource Sharing\footnote{\url{http://enable-cors.org/}} HTTP header must set the property Access-Control-Allow-Origin for sharing the response with any origin. The server also should implement thorough caching strategies, as the cachability is one of the biggest advantages of the Linked Connections framework. Both conditional requests\footnote{\url{conditional requests}} as regular caching\footnote{\url{regular caching}} are recommended. As every connection will need to have a unique an persistent identifier, an HTTP URI, the server must support at least one RDF1.1 format, such as JSON-LD\cite{world2014json}, TriG\cite{bizer2014rdf} or N-Quads\cite{cyganiak2008n}. The connection URI should follow the Linked Data principles\cite{bizer2009linked}.
+Finally, for each document that is published by a Linked Connections server, a Cross Origin Resource Sharing\footnote{\url{http://enable-cors.org/}} HTTP header must set the property Access-Control-Allow-Origin for sharing the response with any origin. The server also should implement thorough caching strategies, as the cachability is one of the biggest advantages of the Linked Connections framework. Both conditional requests\footnote{\url{https://developer.mozilla.org/en-US/docs/Web/HTTP/Conditional_requests}} as regular caching\footnote{\url{https://developer.mozilla.org/en-US/docs/Web/HTTP/Caching}} are recommended. As every connection will need to have a unique an persistent identifier, an HTTP URI, the server must support at least one RDF1.1 format, such as JSON-LD\cite{world2014json}, TriG\cite{bizer2014rdf} or N-Quads\cite{cyganiak2008n}. The connection URI should follow the Linked Data principles\cite{bizer2009linked}.
 
-\subsection{Real-time Linked Connections library}
+\subsection{Real-time in Linked Connections}
 %https://github.com/linkedconnections/gtfsrt2lc
-The Linked Connection library for dealing with real-time data is 
+As we aforementioned, the transport domain should involve in their route planning algorithms the real-time to provide consistent information to the passengers and improve the current  informational services.  The \textit{de-facto} standard for exchange transport data on the Web, GTFS, has created a version for real-time updates, GTFS-RT.  
+Providing globally unique identifiers to the different entities that comprise a public transport network is fundamental to lower the adoption cost of public transport data in route-planning applications. Specifically in the case of live updates about the schedules is important to maintain stable identifiers that remain valid over time. Here we use the Linked Data principles to transform schedule updates given in the GTFS-RT format to Linked Connections and we give the option to serialize them in JSON, CSV or RDF (turtle, N-Triples or JSON-LD) format.
+
+The URI strategy to be used during the conversion process is given following the RFC 6570\footnote{\url{https://tools.ietf.org/html/rfc6570}} specification for URI templates. The parameters used to build the URIs are given following an object-like notation (object.variable) where the left side references a CSV file present in the provided GTFS data source and the right side references a specific column of such file. We use the data from a reference GTFS data source to create the URIs as with only the data present in a GTFS-RT update may not be feasible to create persistent URIs. The GFTS files that can be used to create the URIs are routes and trips files. A simple example is shown in Figure \ref{fig:connection_rt} and an standard template is also available\footnote{\url{https://github.com/linkedconnections/gtfsrt2lc/blob/master/uris_template_example.json}}. As for the variables, any column that exists in those files can be referenced. Next we describe how are the entities URIs build based on these templates :
+
+\begin{itemize}
+\item \textbf{stop}: A Linked Connection references two different stops (departure and arrival stop). The data used to build these specific URIs comes directly from the GTFS-RT update, so we do not specify any CSV file and header from the reference GTFS data source. The variable name chosen in our case is the stop\_id but it can be freely named.
+\item \textbf{route}: For the route identifier we rely on the routes.route\_short\_name and the trips.trip\_short\_name variables.
+\item \textbf{connection}:  For a connection identifier we resort to its departure stop with connection.departureStop, its departure time with connection.departureTime(YYYYMMDD), and the routes.route\_short\_name and the trips.trip\_short\_name. In this case we reference a special entity we called connection which contains the related basic data that can be extracted from a GTFS-RT update for every Linked Connection. A connection entity contains these parameters that can be used on the URIs definition: connection.departureStop, connection.arrivalStop, connection.departureTime and connection.arrivalTime. As both departureTime and arrivalTime are date objects, the expected format can be defined using brackets.
+\item \textbf{trip}: In the case of the trip we add the associated connection.departureTime(YYYYMMDD) on top of the route URI.
+\end{itemize}
+
+\begin{figure}[t]
+	\includegraphics[width=0.47\textwidth]{images/example_connection_rt.png}
+	\caption{Real-time connection example}\label{fig:connection_rt}
+\end{figure}
+
+Finally, we developed a library\footnote{\url{https://github.com/linkedconnections/gtfsrt2lc}} that analyses the information from an static GTFS dataset and the updates from a GTFS-RT feed, exploits the implicit relations among the CSV files and creates the real-time Linked Connections feed in the desirable format with the help of the URIs template, as it is shown in Figure \ref{fig:gtfsrt2lc}.
 \begin{figure}[t]
 	\includegraphics[width=0.47\textwidth]{images/gtfsrt2lc.png}
 	\caption{The GTFSRT2LC library}\label{fig:gtfsrt2lc}
 \end{figure}
-
 
 
 \subsection{Managing real-time and historical with the Linked Connections server}
