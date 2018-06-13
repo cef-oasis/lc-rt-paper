@@ -98,7 +98,6 @@ In this paper we present the Linked Connections framework to provide reliable ac
 The paper is organized as follows: Section 2 presents some of the related work about relevant approaches about exposing data on the web efficiently,  previous steps about the Linked Connections framework, a description of the \textit{de-facto} standard GTFS and the specification of relevant route planning algorithms. Section 3 describes our proposal about the improvements of the Linked Connections framework. Section 4 presents the design of our experiments. Section 5 describes the results we obtained evaluating our main contributions. Section 6 provides a brief discussion about the relevance of our contributions, and Section 7 presents conclusions and areas for future work.
 
 
-
 \section{Related Work}\label{related_work} %David
 On the current state of the Web, huge amount of data are exposed following the principles of Linked Data. In this section, we describe the main contributions on this topic focused on an efficient exposition and on the transport domain, a description of previous approaches developed using the Linked Connections framework and the analysis of the model for transport data, GTFS, that supports our work. Finally we analyse the most relevant algorithms for route planning.
 
@@ -181,17 +180,17 @@ It is important to remark that each Linked Connections page must contain some me
 Finally, for each document that is published by a Linked Connections server, a Cross Origin Resource Sharing\footnote{\url{http://enable-cors.org/}} HTTP header must set the property Access-Control-Allow-Origin for sharing the response with any origin. The server also should implement thorough caching strategies, as the cachability is one of the biggest advantages of the Linked Connections framework. Both conditional requests\footnote{\url{https://developer.mozilla.org/en-US/docs/Web/HTTP/Conditional_requests}} as regular caching\footnote{\url{https://developer.mozilla.org/en-US/docs/Web/HTTP/Caching}} are recommended. As every connection will need to have a unique an persistent identifier, an HTTP URI, the server must support at least one RDF1.1 format, such as JSON-LD\cite{world2014json}, TriG\cite{bizer2014rdf} or N-Quads\cite{cyganiak2008n}. The connection URI should follow the Linked Data principles\cite{bizer2009linked}.
 
 \subsection{Real-time in Linked Connections}
-%https://github.com/linkedconnections/gtfsrt2lc
+
 As we aforementioned, the transport domain should involve in their route planning algorithms the real-time to provide consistent information to the passengers and improve the current  informational services.  The \textit{de-facto} standard for exchange transport data on the Web, GTFS, has created a version for real-time updates, GTFS-RT.  
 Providing globally unique identifiers to the different entities that comprise a public transport network is fundamental to lower the adoption cost of public transport data in route-planning applications. Specifically in the case of live updates about the schedules is important to maintain stable identifiers that remain valid over time. Here we use the Linked Data principles to transform schedule updates given in the GTFS-RT format to Linked Connections and we give the option to serialize them in JSON, CSV or RDF (turtle, N-Triples or JSON-LD) format.
 
-The URI strategy to be used during the conversion process is given following the RFC 6570\footnote{\url{https://tools.ietf.org/html/rfc6570}} specification for URI templates. The parameters used to build the URIs are given following an object-like notation (object.variable) where the left side references a CSV file present in the provided GTFS data source and the right side references a specific column of such file. We use the data from a reference GTFS data source to create the URIs as with only the data present in a GTFS-RT update may not be feasible to create persistent URIs. The GFTS files that can be used to create the URIs are routes and trips files. A simple example is shown in Figure \ref{fig:connection_rt} and an standard template is also available\footnote{\url{https://github.com/linkedconnections/gtfsrt2lc/blob/master/uris_template_example.json}}. As for the variables, any column that exists in those files can be referenced. Next we describe how are the entities URIs build based on these templates :
+The URI strategy to be used during the conversion process is given following the RFC 6570\footnote{\url{https://tools.ietf.org/html/rfc6570}} specification for URI templates. The parameters used to build the URIs are given following an object-like notation (object.variable) where the left side references a CSV file present in the provided GTFS data source and the right side references a specific column of such file. We use the data from a reference GTFS data source to create the URIs as with only the data present in a GTFS-RT update may not be feasible to create persistent URIs. As for the variables, any column that exists in those files can be referenced. The GFTS files that can be used to create the URIs are routes and trips files. As for the variables, any column that exists in those files can be referenced. A simple example is shown in Figure \ref{fig:connection_rt} and an standard template is also available\footnote{\url{https://github.com/linkedconnections/gtfsrt2lc/blob/master/uris_template_example.json}}. Next we describe how are the entities URIs build based on these templates :
 
 \begin{itemize}
 \item \textbf{stop}: A Linked Connection references two different stops (departure and arrival stop). The data used to build these specific URIs comes directly from the GTFS-RT update, so we do not specify any CSV file and header from the reference GTFS data source. The variable name chosen in our case is the stop\_id but it can be freely named.
 \item \textbf{route}: For the route identifier we rely on the routes.route\_short\_name and the trips.trip\_short\_name variables.
 \item \textbf{connection}:  For a connection identifier we resort to its departure stop with connection.departureStop, its departure time with connection.departureTime(YYYYMMDD), and the routes.route\_short\_name and the trips.trip\_short\_name. In this case we reference a special entity we called connection which contains the related basic data that can be extracted from a GTFS-RT update for every Linked Connection. A connection entity contains these parameters that can be used on the URIs definition: connection.departureStop, connection.arrivalStop, connection.departureTime and connection.arrivalTime. As both departureTime and arrivalTime are date objects, the expected format can be defined using brackets.
-\item \textbf{trip}: In the case of the trip we add the associated connection.departureTime(YYYYMMDD) on top of the route URI.
+\item \textbf{trip}: In the case of the trip we add the expected departure time on top of the route URI based on the associated connection.departureTime(YYYYMMDD) and the information about the delay.
 \end{itemize}
 
 \begin{figure}[t]
@@ -207,23 +206,72 @@ Finally, we developed a library\footnote{\url{https://github.com/linkedconnectio
 
 
 \subsection{Managing real-time and historical with the Linked Connections server}
-The second main contribution of this paper, after develop a way to create Linked Connections feeds taking into account real-time, is how to provide reliable access to historical and real-time transport data in an cost-efficiently way. For that reason, we develop a Linked Connections server which exposes data fragments using JSON-LD serialization format. First, the server uses the GTFSRT2LC library for creating the Linked Connections feed as we describe in the above section. After that, the fragmenting process starts using the information provided in the configuration of the server about the fragment size and the fragment time span. 
+The third main contribution of this paper, after develop a way to create Linked Connections feeds taking into account real-time, is how to provide reliable access to historical and real-time transport data in an cost-efficiently way. For that reason, we develop a Linked Connections server which exposes data fragments using JSON-LD serialization format. First, the server uses the GTFSRT2LC library for creating the Linked Connections feed as we describe in the above section. After that, the fragmenting process starts using the information provided in the configuration of the server about the fragment size and the fragment time span. 
 
 As we aforementioned, the previous process for fragmenting LC are based on the time, using this variable to pagination the data and creating an heterogeneous environment in terms of the fragment size. It is the main reason why we start to fragmenting the historical data of the LC feed homogeneously providing a specific fragment size, that has a relevant effect in terms of performance, as we demonstrate in the Section 5. We also fragment the LC real-time feed using a time span. 
-%Julian's help is needed. The server will expose both, the historical and the real-time connections 
-%explicar como se gestiona el tema de datos stadisticos y datos reales (como una connection static no se tiene en cuenta cuando hay una connection con tiempo real, es por los ids de las estaciones y los departure y arrival time)
 
-The server also allows querying historic data by means of the Memento Framework\cite{van2010http} which enables time-based content negotiation over HTTP. By using the Accept-Datetime header a client can request the state of a resource at a given moment. If existing, the server will respond with a 302 Found containing the URI of the stored version of such resource. So if a request is made to obtain a Linked Connections fragment identified by a departure time, the headers of the fragment will provide the information about the Accept-Datetime. That means that is possible to know what is the state of the delays at a given date-time for a set of departures times.
+The server is able to manage both, the historical and the real-time connections. First, the server create the Linked Connections from the information provided by a GTFS dataset and fragment the historical data into several fragments. After that, if the transport system has an open real-time service, the sever starts to process the updates from the GTFS-RT feed and create another stream of connections based on that information. After that, the server searches the correspondence between the historical and real-time connections based on the URIs of the trips and replace the historical connections with the ones that contains real-time updates. Finally, the server exposes the stream of historical and real-time connections on an API following the fragmentation approach. This process, shown in Figure \ref{fig:lc_server}, is repeated every time that the server process an update.
 
+\begin{figure}[t]
+	\includegraphics[width=0.47\textwidth]{images/lc_server.png}
+	\caption{The Linked Connections server}\label{fig:lc_server}
+\end{figure}
 
-\subsection{Route planning algorithms}
-%move to evaluation design section?
+The server also allows querying historic data by means of the Memento Framework\cite{van2010http} which enables time-based content negotiation over HTTP. By using the Accept-Datetime header a client can request the state of a resource at a given moment. If existing, the server will respond with a 302 Found containing the URI of the stored version of such resource. So if a request is made to obtain a Linked Connections fragment identified by a departure time, the headers of the fragment will provide the information about the Accept-Datetime. That means that is possible to know what is the state of the delays at a given date-time for a set of connections which guarantees the reliable of the data.
+
 
 \section{Evaluation Design}
-%data analysis (size, rt or not, etc), implementations used (all), 
-\subsection{A running example: Providing reliable access to SNCB}
+%data analysis (size, rt or not, etc), implementations used (all),  queries
+We design a set of experiments in order to evaluate our approach. In this section we describe the main features of our developments, data used for the experiments and the testbed we created.
+We implement different components in JavaScript for the Node.js platform. We chose JavaScript as it allows us to use the components both on a command-line environment as well as in the browser.
+\begin{itemize}
+\item GTFSRT2LC: A tool to convert real-time updates and timetables as open data to Linked Connections Vocabulary.
+\item LC server: Publishes streams of connections in JSON-LD, using a MongoDB?
+\item CSA algorithm: We developed the CSA algorithm in the top of the Linked Connections Framework.
+\end{itemize}
+We also use other tools that we developed previously, as the GTFS2LC\footnote{\url{https://github.com/linkedconnections/gtfs2lc}} library, that it is able to convert static timetables as open data to Linked Connections Vocabulary and the Memento Protocol on the top of the Linked Connections Server\cite{rojas2017providing}, to enable reliable access to historical data, as we describe in the Section 3.
+
+We also set up 4 different servers: (i) a \textit{Linked Connections server} ...
+
+These tools are combined in different set-ups:
+\begin{itemize}
+\item Historical data fragmentation by size with cache:
+\item Historical data fragmentation by size without cache:
+\item Real-time and historical data fragmentation by size with cache:
+\item Real-time and historical data fragmentation by size without cache:
+\item Real-time and historical data fragmentation by time
+\end{itemize}
+
+As far as we are aware of, there are no general-purpose benchmarks in the state of the art for testing our main contributions with the Linked Connections framework. Therefore, we have created a testbed as follows: 1) we have selected and downloaded 4 different representative GTFS datasets, available as open data, that also cover several geographical locations, 2) we have created several route planning queries (departure and arrival stop with a departure time) that reflect real-life trips, with multiple levels of complexity, shown in Table \ref{table:queries}, and 3) we have evaluated these queries in the different set ups take into account the features of each dataset.
+
+\begin{table}
+\centering
+\caption{LC testbed}
+\label{table:queries}
+\begin{tabular}{lll}
+\hline
+\multicolumn{1}{l|}{\textbf{Query}} & \multicolumn{1}{l|}{\textbf{Dataset}} & \multicolumn{1}{l}{\textbf{\# of Connections}} \\ \hline
+                            &                              &                                    \\
+                            &                              &                                    \\
+                            &                              &                                   
+\end{tabular}
+\end{table}
+
+The used GTFS datasets and GTFS-RT feeds are available as open data on the Web. There are two datasets that represent the Belgian Rail Transport System (NMBS) and the Flemish Transport Company (Delijn) and other two that represent the Tram Company of Barcelona (TBS and TBX). The first two one, also provide open access to their real-time following the standard GTFS-RT format but the second ones have developed an ad-hoc real-time API\footnote{\url{https://opendata.tram.cat/manual_en.pdf}}. We are currently developing a tool to transform the ad-hoc real-time information to the GTFS-RT format but at this moment, only historical data can be taken into account in these cases.
+
+The queries...
+
+We ran the experiments on a...
+
+Our experiments can be reproduced using the code at \url{https://github.com/julianrojas87/linked-connections-server} and the testbed and the data at \url{https://github.com/cef-oasis/linkedconnections-tests}
+
+
+\subsection{A running example: Providing reliable access to NMBS}
 
 \section{Results}
+
+
+
 
 \section{Discussion}
 
