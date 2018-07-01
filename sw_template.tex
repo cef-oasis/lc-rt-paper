@@ -60,9 +60,22 @@ and
 %\end{review}
 
 \begin{abstract}
-Using Linked Data based approaches a wide amount of companies and institutions share their data in an affordable way while allowing third parties to perform standard and federated queries. In transport domain, where a complex environment emerges, static, real-time and historical data have to coexist to provide reliable data to the information systems. Currently, however, public transport data is published in a way in which the processing is too expensive. In previous work, the Linked Connections (LC) framework was introduced as a cost-efficient publishing alternative to the \textit{de-facto} standard GTFS and route planning APIs. LC provides a light HTTP interface that allows smart clients to create their own route planners. We notice that at the moment in which historical and real-time are taken into account in the LC framework, some improvements are needed. Specifically in the case of live updates about the schedules, where it is important to maintain stable identifiers that remain valid over time and the size of each exposed fragment.
+  Using Linked Data based approaches, companies and institutions share their data in an affordable way while allowing third parties to perform standard and federated queries.
+  In the transport domain, where a complex environment emerges, static, real-time and historical data have to coexist to provide reliable data to the information systems.
+  Currently, however, public transport data is published in a way in which the processing is too expensive.
+  In previous work, the Linked Connections (LC) framework was introduced as a cost-efficient publishing alternative to the \textit{de-facto} standard GTFS and route planning APIs.
+  LC provides a light HTTP interface that allows smart clients to create their own route planners.
+  We notice that at the moment in which historical and real-time are taken into account in the LC framework, some improvements are needed.
+  Specifically in the case of live updates about the schedules, where it is important to maintain stable identifiers that remain valid over time and the size of each exposed fragment.
 
-This paper continues the previous work we have made for developing an affordable framework to publish reliable real-time and historical transport data. Our main contributions are: (i) an extension of the current Linked Connections specification providing methods and vocabulary to deal with real-time data (ii) a Linked Connections Real-Time server that is able to process GTFS-RT feeds providing consistent identifiers and (iii) an efficient management of historical data taking into account the size of each fragments exposed on the Web. We evaluate and compare the contributions with our previous approaches where the distribution of the fragments were based on other variables, like the time. We discover that take into account the size of the fragments has a relevant impact in the performance of query evaluation, as originally expected. In future work we would like to identify the optimal size of the fragments automatically, taking into account multiple variables like the geographical location or the type of transport.
+  This paper continues the previous work we have made for developing an affordable framework to publish reliable real-time and historical transport data.
+  Our main contributions are:
+  (i) an extension of the current Linked Connections specification providing methods and vocabulary to deal with real-time data
+  (ii) a Linked Connections Real-Time server that is able to process GTFS-RT feeds providing consistent identifiers and
+  (iii) an efficient management of historical data taking into account the size of each fragments exposed on the Web.
+  We evaluate and compare the contributions with our previous approaches where the distribution of the fragments were based on other variables, like the time.
+  We discover that take into account the size of the fragments has a relevant impact in the performance of query evaluation, as originally expected.
+  In future work we would like to identify the optimal size of the fragments automatically, taking into account multiple variables like the geographical location or the type of transport.
 \end{abstract}
 
 \begin{keyword}
