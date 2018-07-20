@@ -1,0 +1,9 @@
+Dear guest editors of the special issue on Knowledge Graphs: Construction, Management and Querying for the Semantic Web Journal,
+
+We hereby would like to submit our paper on Linked Connections. Linked Connections is a specification we have been working on across two semantic web research labs: the team at Universidad Politecnica de Madrid of prof. Oscar Corcho, and the team of prof. Ruben Verborgh at Ghent University. This paper work continues the initial research done during the PhD track of dr. Pieter Colpaert, and summerizes the work so far in creating a world-wide decentralized knowledge graph for public transport information. We extend this current work with an evaluation of fragment sizes, to better understand how such design choices influence the performance of route planning queries over this knowledge graph.
+
+This special issue comes at an ideal time. Drs. Julián Rojas (Ghent) and Drs. David Chaves (Madrid), both being almost in the middle of their PhD tracks, were able to collaborate thoroughly thanks to a Connecting European Facilities project that is now running to an end. They both worked on getting public transport networks for their regions into production, each with their own properties. We believe an interesting aspect to this paper is that it reports on many unforeseen design issues while implementing this particular knowledge graph, such as the need for a memento protocol implementation in order to get to guarantee reliable query evaluation on the client-side. We hope that the reviewers, and maybe the audience of the Semantic Web Journal, enjoy our manuscript as much as we enjoyed writing it.
+
+Kind regards,
+
+Julián Rojas, David Chaves, Pieter Colpaert, Ruben Verborgh and Oscar Corcho
